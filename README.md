@@ -1,3 +1,3 @@
 
-Gourd mysql drive
+Gourd database utils
 ===============
