@@ -25,16 +25,20 @@ var maps *ConfigMap
 // GenerateDsn 根据配置生成sdn连接信息
 func (conf Config) GenerateDsn() string {
 	dsn := ""
+	dsnParam := ""
 
 	if conf.Type == "mysql" {
-		dsnParam := ""
 		if conf.Param != "" {
 			dsnParam = "?" + conf.Param
 		}
 		dsnF := "%s:%s@(%s:%d)/%s%s"
 		dsn = fmt.Sprintf(dsnF, conf.User, conf.Pass, conf.Host, conf.Port, conf.Database, dsnParam)
-	} else if conf.Type == "sqlite" {
-
+	} else if conf.Type == "sqlserver" {
+		if conf.Param != "" {
+			dsnParam = "&" + conf.Param
+		}
+		dsnF := "sqlserver://%s:%s@%s:%d?database=%s%s"
+		dsn = fmt.Sprintf(dsnF, conf.User, conf.Pass, conf.Host, conf.Port, conf.Database, dsnParam)
 	}
 
 	return dsn
