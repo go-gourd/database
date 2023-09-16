@@ -39,6 +39,15 @@ func (conf Config) GenerateDsn() string {
 		}
 		dsnF := "sqlserver://%s:%s@%s:%d?database=%s%s"
 		dsn = fmt.Sprintf(dsnF, conf.User, conf.Pass, conf.Host, conf.Port, conf.Database, dsnParam)
+	} else if conf.Type == "postgres" {
+		if conf.Param != "" {
+			dsnParam = "?" + conf.Param
+		}
+		dsnF := "host=%s user=%s password=%s dbname=%s port=%d %s"
+		dsn = fmt.Sprintf(dsnF, conf.Host, conf.User, conf.Pass, conf.Database, conf.Port, dsnParam)
+	} else if conf.Type == "oracle" {
+		dsnF := "%s/%s@%s:%d/%s"
+		dsn = fmt.Sprintf(dsnF, conf.User, conf.Pass, conf.Host, conf.Port, conf.Database)
 	}
 
 	return dsn
