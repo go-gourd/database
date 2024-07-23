@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"github.com/go-gourd/gourd/config"
+	"net/url"
 )
 
 // Config 适用于单个连接的配置
@@ -17,11 +17,6 @@ type Config struct {
 	SlowLogTime int    `toml:"slow_log_time" json:"slow_log_time"` //慢日志阈值（毫秒）0为不开启
 }
 
-// ConfigMap 适用于多个连接的配置
-type ConfigMap map[string]Config
-
-var maps *ConfigMap
-
 // GenerateDsn 根据配置生成sdn连接信息
 func (conf Config) GenerateDsn() string {
 	dsn := ""
@@ -32,55 +27,23 @@ func (conf Config) GenerateDsn() string {
 			dsnParam = "?" + conf.Param
 		}
 		dsnF := "%s:%s@(%s:%d)/%s%s"
-		dsn = fmt.Sprintf(dsnF, conf.User, conf.Pass, conf.Host, conf.Port, conf.Database, dsnParam)
+		dsn = fmt.Sprintf(dsnF, conf.User, url.QueryEscape(conf.Pass), conf.Host, conf.Port, conf.Database, dsnParam)
 	} else if conf.Type == "sqlserver" {
 		if conf.Param != "" {
 			dsnParam = "&" + conf.Param
 		}
 		dsnF := "sqlserver://%s:%s@%s:%d?database=%s%s"
-		dsn = fmt.Sprintf(dsnF, conf.User, conf.Pass, conf.Host, conf.Port, conf.Database, dsnParam)
+		dsn = fmt.Sprintf(dsnF, conf.User, url.QueryEscape(conf.Pass), conf.Host, conf.Port, conf.Database, dsnParam)
 	} else if conf.Type == "postgres" {
 		if conf.Param != "" {
 			dsnParam = "?" + conf.Param
 		}
 		dsnF := "host=%s user=%s password=%s dbname=%s port=%d %s"
-		dsn = fmt.Sprintf(dsnF, conf.Host, conf.User, conf.Pass, conf.Database, conf.Port, dsnParam)
+		dsn = fmt.Sprintf(dsnF, conf.Host, conf.User, url.QueryEscape(conf.Pass), conf.Database, conf.Port, dsnParam)
 	} else if conf.Type == "oracle" {
 		dsnF := "%s/%s@%s:%d/%s"
-		dsn = fmt.Sprintf(dsnF, conf.User, conf.Pass, conf.Host, conf.Port, conf.Database)
+		dsn = fmt.Sprintf(dsnF, conf.User, url.QueryEscape(conf.Pass), conf.Host, conf.Port, conf.Database)
 	}
 
 	return dsn
-}
-
-// GetConfig 获取指定数据库配置
-func GetConfig(name string) *Config {
-
-	all := *GetConfigAll()
-
-	// 判断all中是否存在
-	if _, ok := all[name]; ok {
-		db := all[name]
-		return &db
-	}
-	return nil
-}
-
-// GetConfigAll 获取所有数据库配置
-func GetConfigAll() *ConfigMap {
-
-	//已存在 -返回
-	if maps != nil {
-		return maps
-	}
-
-	// 初始化配置默认值
-	maps = &ConfigMap{}
-
-	err := config.Unmarshal("database", maps)
-	if err != nil {
-		panic(err)
-	}
-
-	return maps
 }
